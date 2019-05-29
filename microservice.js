@@ -8,20 +8,14 @@ const connection = mysql.createConnection({
   host: 'localhost',
   user: 'salvador',
   password: 'Chavapi181113<3',
-  database: 'clients'
+  database: 'PasteleriaDB'
 });
 
 var bodyParser=require("body-parser")
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
-app.get('/login',function(req,res,next){
-  if(req.query.filter){
-      next();
-      return;
-  }
-  res.send('Login.');
-});
+
 connection.connect((err) => {
   if (err) throw err;
   console.log('Connected!');
@@ -45,5 +39,3 @@ app.post('/plogin',function(req,res)
 var server = app.listen(8080,function(){
   console.log('Service Running...');
 });
-
-
