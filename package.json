@@ -1,0 +1,22 @@
+{
+  "name": "elgloboms",
+  "version": "1.0.0",
+  "description": "MicroServicio para pagina de El Globo",
+  "main": "microservice.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SalvadorHellsing95/ElGloboMS.git"
+  },
+  "keywords": [
+    "MS"
+  ],
+  "author": "Jose Salvador Gonzalez Blanco",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SalvadorHellsing95/ElGloboMS/issues"
+  },
+  "homepage": "https://github.com/SalvadorHellsing95/ElGloboMS#readme"
+}
