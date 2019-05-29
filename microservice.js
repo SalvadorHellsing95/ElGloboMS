@@ -21,20 +21,68 @@ connection.connect((err) => {
   console.log('Connected!');
 });
 
-
+app.get('/',function(req,res,next){
+    if(req.query.filter){
+        next();
+        return;
+    }
+        //Se utiliza para usar json con texto plano.
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+    res.send('Prueba.');
+  });
 //POST
-app.post('/plogin',function(req,res)
+app.post('/login',function(req,res)
 {
-    var user_n =req.body.id;
-    var pass=req.body.pass;
+        //Se utiliza para usar json con texto plano.
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+
+    var user_n =req.body.correo;
+    var contras=req.body.contra;
     var Aut;
-    connection.query("SELECT count(*) FROM clients WHERE name=" + mysql.escape(user_n) + "AND password=" +mysql.escape(pass),function(err,result,fields)
+    connection.query("SELECT count(*) FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
     {
        if(err) throw err;
-       console.log("User Login") 
+       console.log("User Login Step 1");
+        //Se utiliza para usar json con texto plano.
        Aut=result;
     });
+    if(Aut!=0)
+    {
+       connection.query("SELECT * FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+    {
+       if(err) throw err;
+       console.log("User Login Step 2");
+       res.send(result);
+    }); 
+    }
 });
+
+app.get('/cubiertas',function(req,res)
+{
+    //Se utiliza para usar json con texto plano.
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+
+    connection.query("SELECT * FROM Cubierta",function(err,result,fields)
+    {
+       if(err) throw err;
+       console.log("Cubierta Query");
+       res.send(result);
+    });
+});
+app.get('/Search/Cubierta',function(req,res){
+    var CubID=req.query.cubierta_id;
+
+    connection.query("SELECT * FROM Pastel WHERE cubiertaID="+mysql.escape(CubID),function(err,result,fields)
+    {
+        if(err) throw err;
+        console.log("Search Cubierta");
+        res.send(result);
+    });
+});
+
 
 var server = app.listen(8080,function(){
   console.log('Service Running...');
