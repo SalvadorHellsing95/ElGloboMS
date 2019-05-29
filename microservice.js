@@ -72,6 +72,53 @@ app.get('/cubiertas',function(req,res)
        res.send(result);
     });
 });
+//Consulta Carrito
+app.post('/carrito',function(req,res)
+{
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+
+    //Se procede a identificar al usuario.
+    var user_n =req.body.correo;
+    var contras=req.body.contra;
+    var Aut;
+    connection.query("SELECT count(*) FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+    {
+       if(err) throw err;
+       console.log("Carrito Step 1");
+        //Se utiliza para usar json con texto plano.
+       Aut=result;
+    });
+    if(Aut!=0)
+    {
+      
+    //Se consulta el Carrito
+    connection.query("SELECT * FROM VWCarrito WHERE correo=" + mysql.escape(user_n) ,function(err,result,fields)
+    {
+       if(err) throw err;
+       console.log("Carrito Step 2");
+        //Se utiliza para usar json con texto plano.
+       res.send(result);
+    });
+    }
+});
+
+
+//Consulta de Pasteles
+app.get('/pasteles',function(req,res)
+{
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+
+    connection.query("SELECT * FROM Pastel",function(err,result,fields)
+    {
+       if(err) throw err;
+       console.log("Pastel Query");
+       res.send(result);
+    });
+
+});
+//Busqueda de Pasteles por Cubierta.
 app.get('/Search/Cubierta',function(req,res){
     var CubID=req.query.cubierta_id;
 
@@ -82,6 +129,7 @@ app.get('/Search/Cubierta',function(req,res){
         res.send(result);
     });
 });
+
 
 
 var server = app.listen(8080,function(){
