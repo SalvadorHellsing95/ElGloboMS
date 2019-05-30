@@ -95,7 +95,7 @@ app.post('/carrito',function(req,res)
     {
       
     //Se consulta el Carrito
-    connection.query("SELECT * FROM VWCarrito WHERE correo=" + mysql.escape(user_n) ,function(err,result,fields)
+    connection.query("SELECT * FROM vwCarrito WHERE usuario=" + mysql.escape(user_n) ,function(err,result,fields)
     {
        if(err) throw err;
        console.log("Carrito Step 2");
@@ -111,7 +111,7 @@ app.get('/pasteles',function(req,res)
     res.header("Access-Control-Allow-Origin", "*");
     res.setHeader('Content-Type','text/html; charset=utf-8mb4');
 
-    connection.query("SELECT * FROM Pastel",function(err,result,fields)
+    connection.query("SELECT * FROM vwPastel",function(err,result,fields)
     {
        if(err) throw err;
        console.log("Pastel Query");
@@ -121,12 +121,14 @@ app.get('/pasteles',function(req,res)
 });
 //Busqueda de Pasteles por Cubierta.
 app.get('/Search/Cubierta',function(req,res){
-    var CubID=req.query.cubierta_id;
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+    var CubID=req.query.cubierta;
 
-    connection.query("SELECT * FROM Pastel WHERE cubiertaID="+mysql.escape(CubID),function(err,result,fields)
+    connection.query("SELECT * FROM vwPastel WHERE cubierta="+mysql.escape(CubID),function(err,result,fields)
     {
         if(err) throw err;
-        console.log("Search Cubierta");
+        console.log("Search Cubierta "+CubID);
         res.send(result);
     });
 });
@@ -259,13 +261,13 @@ app.post('/add/pasteles',function(req,res)
                         Adm=parseInt(result[0].administrador);
                         if(Adm==1)
                         {
-                        connection.query(SQL,function(err,result,fields)
+                            connection.query(SQL,function(err,result,fields)
                         {
                             if(err) throw err;
                             res.send("Ok");
                         });
                         }else{
-                        console.log("Algo paso mal :c");
+                            console.log("Algo paso mal :c");
                         }
                         //console.log("Reporte Final Step");
                     }   
@@ -275,6 +277,154 @@ app.post('/add/pasteles',function(req,res)
         });
     
 });
+//Insertar Cubierta
+app.post('/add/cubierta',function(req,res)
+{
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+    var user_n = req.body.correo;;
+    var contras=req.body.contra;
+    var nombre=req.body.nombre;
+
+    var SQL="INSERT INTO Cubierta(nombre) VALUES("+
+    mysql.escape(nombre)+");";
+
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+        {
+           if(err){
+            throw err;  
+           }else{
+
+                console.log("Insert Cub Step 1");
+                //Se utiliza para usar json con texto plano.
+                Aut=result[0].count;
+                if(Aut!=0)
+                {
+                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+                {
+                    if(err){
+                        throw err;
+                    }else{
+                        console.log("Insert Cub Step 2");
+                        Adm=parseInt(result[0].administrador);
+                        if(Adm==1)
+                        {
+                            connection.query(SQL,function(err,result,fields)
+                        {
+                            if(err) throw err;
+                            res.send("Ok");
+                        });
+                        }else{
+                            console.log("Algo paso mal :c");
+                        }
+                        //console.log("Reporte Final Step");
+                    }   
+                });
+                }
+            }
+        });
+    
+});
+
+//Insertar Sabor.
+app.post('/add/sabor',function(req,res)
+{
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+    var user_n = req.body.correo;;
+    var contras=req.body.contra;
+    var nombre=req.body.nombre;
+
+    var SQL="INSERT INTO Sabor(nombre) VALUES("+
+    mysql.escape(nombre)+");";
+
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+        {
+           if(err){
+            throw err;  
+           }else{
+
+                console.log("Insert Cub Step 1");
+                //Se utiliza para usar json con texto plano.
+                Aut=result[0].count;
+                if(Aut!=0)
+                {
+                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+                {
+                    if(err){
+                        throw err;
+                    }else{
+                        console.log("Insert Cub Step 2");
+                        Adm=parseInt(result[0].administrador);
+                        if(Adm==1)
+                        {
+                            connection.query(SQL,function(err,result,fields)
+                        {
+                            if(err) throw err;
+                            res.send("Ok");
+                        });
+                        }else{
+                            console.log("Algo paso mal :c");
+                        }
+                        //console.log("Reporte Final Step");
+                    }   
+                });
+                }
+            }
+        });
+    
+});
+
+//Insertar Tipo.
+app.post('/add/tipo',function(req,res)
+{
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+    var user_n = req.body.correo;;
+    var contras=req.body.contra;
+    var nombre=req.body.nombre;
+
+    var SQL="INSERT INTO Tipo(nombre) VALUES("+
+    mysql.escape(nombre)+");";
+
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+        {
+           if(err){
+            throw err;  
+           }else{
+
+                console.log("Insert Cub Step 1");
+                //Se utiliza para usar json con texto plano.
+                Aut=result[0].count;
+                if(Aut!=0)
+                {
+                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+                {
+                    if(err){
+                        throw err;
+                    }else{
+                        console.log("Insert Cub Step 2");
+                        Adm=parseInt(result[0].administrador);
+                        if(Adm==1)
+                        {
+                            connection.query(SQL,function(err,result,fields)
+                        {
+                            if(err) throw err;
+                            res.send("Ok");
+                        });
+                        }else{
+                            console.log("Algo paso mal :c");
+                        }
+                        //console.log("Reporte Final Step");
+                    }   
+                });
+                }
+            }
+        });
+    
+});
+
+
 
 
 var server = app.listen(8080,function(){

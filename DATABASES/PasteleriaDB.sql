@@ -35,6 +35,7 @@ CREATE TABLE Pastel
 (
 	pastelID INT NOT NULL AUTO_INCREMENT,
     nombre NVARCHAR(30) NOT NULL,
+    descripcion MEDIUMTEXT NOT NULL,
     saborID INT NOT NULL,
     tipoID INT NOT NULL,
     precio DOUBLE NOT NULL,
@@ -44,10 +45,10 @@ CREATE TABLE Pastel
     clave NVARCHAR(10) NOT NULL,
     imgRef VARCHAR(255) NOT NULL,
     PRIMARY KEY(pastelID),
-    FOREIGN KEY(saborID) REFERENCES Sabor(SaborID),
-    FOREIGN KEY(tipoID) REFERENCES Tipo(tipoID),
-    FOREIGN KEY(cubiertaID) REFERENCES Cubierta(cubiertaID),
-    FOREIGN KEY(tamanoID) REFERENCES Tamano(tamanoID)
+    FOREIGN KEY(saborID) REFERENCES Sabor(SaborID) ON DELETE CASCADE,
+    FOREIGN KEY(tipoID) REFERENCES Tipo(tipoID) ON DELETE CASCADE,
+    FOREIGN KEY(cubiertaID) REFERENCES Cubierta(cubiertaID) ON DELETE CASCADE,
+    FOREIGN KEY(tamanoID) REFERENCES Tamano(tamanoID) ON DELETE CASCADE
 );
 
 CREATE TABLE Usuario
@@ -70,6 +71,6 @@ CREATE TABLE Carrito
     pastelID INT NOT NULL,
     cantidad INT NOT NULL,
     PRIMARY KEY(carritoID),
-    FOREIGN KEY(usuarioID) REFERENCES Usuario(usuarioID),
-    FOREIGN KEY(pastelID) REFERENCES Pastel(pastelID)
+    FOREIGN KEY(usuarioID) REFERENCES Usuario(usuarioID) ON DELETE CASCADE,
+    FOREIGN KEY(pastelID) REFERENCES Pastel(pastelID) ON DELETE CASCADE
 );
