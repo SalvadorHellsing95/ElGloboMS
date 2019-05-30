@@ -142,7 +142,7 @@ app.post('/send',function(req,res){
         var user_n =req.body.correo;
         var contras=req.body.contra;
         var Aut,Adm;
-        connection.query("SELECT count(*) FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+        connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
         {
            if(err){
             throw err;  
@@ -150,7 +150,7 @@ app.post('/send',function(req,res){
 
                 console.log("Reporte Step 1");
                 //Se utiliza para usar json con texto plano.
-                Aut=result;
+                Aut=result[0].count;
                 if(Aut!=0)
                 {
                     connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
@@ -173,38 +173,107 @@ app.post('/send',function(req,res){
                 }
             }
         });
-        
-//             var workbook = new excel.Workbook();
-//             var sheet = workbook.addWorksheet('MySheet');
+});
 
-//             connection.query("SELECT * FROM Pastel",function(err,result,fields)
-//             {
-//                 if(err) throw err;
-//                 console.log("Reporte Step 3");
-//                 Aut=result;
-//             });
-//             sheet.addRow().values=Object.keys(Aut[0]);
+//Agregar Usuarios.
+app.post('/add/user',function(req,res){
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+    var Aux;
+    var correo =req.body.correo;
+    var contrasena=req.body.contrasena;
+    var aPaterno=req.body.aPaterno;
+    var aMaterno=req.body.aMaterno;
+    var nombre=req.body.nombre;  
+    var direccion=req.body.direccion;
+    var SQL="INSERT INTO Usuario(nombre,aPaterno,aMaterno,correo,contrasena,administrador,direccion) VALUES("+mysql.escape(nombre)+","+mysql.escape(aPaterno)+","+mysql.escape(aMaterno)+
+    ","+mysql.escape(correo)+","+mysql.escape(contrasena)+","+"0"+","+mysql.escape(direccion)+");";
+    connection.query("SELECT count(*) as count FROM Usuario where correo="+mysql.escape(correo),function(err,result,fields)
+    {
+        if(err)
+        {
+            throw err;
+        }else{
+            Aux=result[0].count;
+            console.log(Aux);
+            if(Aux==0)
+            {
+               
+
+                connection.query(SQL,function(err,result,fields)
+                {
+                    if(err)
+                    {
+                        throw err;
+                    }else{
+                        res.send('OK');
+                    }
+                });
+            }else{
+                res.send('ALREADY EXISTS');
+            }
             
-//             Aut.forEach(function(item){
-//                 var valueArray=[];
-//                 valueArray=Object.values(item);
-//                 sheet.addWRow.values=valueArray;
-//             });
+        }
+    });
+    
+});
 
-//             var tempfile = require('tempfile');
-//             var tempFilePath = tempfile('.xlsx');
-//             console.log("tempFilePath : ", tempFilePath);
-//             workbook.xlsx.writeFile(tempFilePath).then(function() {
-//             res.sendFile(tempFilePath, function(err){
-//             console.log('---------- error downloading file: ', err);
-//              });
-//             console.log('file is written');
-// });
-            
+//Agregar Pasteles
+app.post('/add/pasteles',function(req,res)
+{
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+    var user_n = req.body.correo;;
+    var contras=req.body.contra;
+    var nombre =req.body.nombre;
+    var saborID=req.body.saborID;
+    var tipoID=req.body.tipoID;
+    var precio=req.body.precio;
+    var cubiertaID=req.body.cubiertaID;
+    var tamanoID=req.body.tamanoID;
+    var existencias=req.body.existencias;
+    var clave=req.body.clave;
+    var imgRef=req.body.imgRef;
 
+    var SQL="INSERT INTO Pastel(nombre, saborID, tipoID, precio, cubiertaID, tamanoID, existencias, clave, imgRef) VALUES("+
+    mysql.escape(nombre)+','+mysql.escape(saborID)+','+mysql.escape(tipoID)+','+mysql.escape(precio)+','+mysql.escape(cubiertaID)+','+mysql.escape(tamanoID)+','+
+    mysql.escape(existencia)+','+mysql.escape(clave)+','+mysql.escape(imgRef)+");";
 
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+        {
+           if(err){
+            throw err;  
+           }else{
 
-   // res.sendFile(path.join(__dirname + '/Prueba.xls'));
+                console.log("Insert Pas Step 1");
+                //Se utiliza para usar json con texto plano.
+                Aut=result[0].count;
+                if(Aut!=0)
+                {
+                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+                {
+                    if(err){
+                        throw err;
+                    }else{
+                        console.log("Insert Pas Step 2");
+                        Adm=parseInt(result[0].administrador);
+                        if(Adm==1)
+                        {
+                        connection.query(SQL,function(err,result,fields)
+                        {
+                            if(err) throw err;
+                            res.send("Ok");
+                        });
+                        }else{
+                        console.log("Algo paso mal :c");
+                        }
+                        //console.log("Reporte Final Step");
+                    }   
+                });
+                }
+            }
+        });
+    
 });
 
 
