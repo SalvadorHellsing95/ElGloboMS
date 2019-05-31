@@ -120,18 +120,48 @@ app.get('/pasteles',function(req,res)
 
 });
 //Busqueda de Pasteles por Cubierta.
-app.get('/Search/Cubierta',function(req,res){
+app.get('/search/cubierta',function(req,res){
     res.header("Access-Control-Allow-Origin", "*");
     res.setHeader('Content-Type','text/html; charset=utf-8mb4');
     var CubID=req.query.cubierta;
 
-    connection.query("SELECT * FROM vwPastel WHERE cubierta="+mysql.escape(CubID),function(err,result,fields)
+    connection.query("SELECT * FROM vwPastel WHERE cubierta LIKE "+mysql.escape(CubID)+"%'",function(err,result,fields)
     {
         if(err) throw err;
         console.log("Search Cubierta "+CubID);
         res.send(result);
     });
 });
+
+//Busqueda de Pasteles por Pastel
+app.get('/search/pastel',function(req,res){
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+    var CubID=req.query.pastel;
+
+    connection.query("SELECT * FROM vwPastel WHERE nombre LIKE "+mysql.escape(CubID),function(err,result,fields)
+    {
+        if(err) throw err;
+        console.log("Search Pastel "+CubID);
+        res.send(result);
+    });
+});
+
+//Busqueda de Pasteles por Sabor
+app.get('/search/sabor',function(req,res){
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+    var CubID=req.query.sabor;
+
+    connection.query("SELECT * FROM vwPastel WHERE sabor LIKE "+mysql.escape(CubID),function(err,result,fields)
+    {
+        if(err) throw err;
+        console.log("Search Sabor "+CubID);
+        res.send(result);
+    });
+});
+
+
 
 //Prueba de envio de archivos.
 app.post('/send',function(req,res){
@@ -192,6 +222,7 @@ app.post('/add/user',function(req,res){
     ","+mysql.escape(correo)+","+mysql.escape(contrasena)+","+"0"+","+mysql.escape(direccion)+");";
     connection.query("SELECT count(*) as count FROM Usuario where correo="+mysql.escape(correo),function(err,result,fields)
     {
+        console.log(correo+contrasena+aPaterno+aMaterno+nombre+direccion+nombre+direccion);
         if(err)
         {
             throw err;
@@ -220,6 +251,54 @@ app.post('/add/user',function(req,res){
     
 });
 
+app.post('/add/carrito',function(req,res)
+{
+    res.header("Access-Control-Allow-Origin", "*");
+    res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+    var user_n = req.body.correo;
+    var contras=req.body.contra;
+    var pastel=req.body.pastel;
+    var pastel=req.body.cantidad;
+    var SQL,Aut;
+    var usuarioID;
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo="+mysql.escape(user_n)+" AND contrasena="+mysql.escape(contras),function(err,result,fields){
+        if(err)
+        {
+            throw err;
+        }else{
+            Aut=result[0].count;
+            console.log("Add Carrito Step 1");
+
+            if(Aut!=0)
+            {
+                connection.query("SELECT usuarioID FROM Usuario WHERE correo="+mysql.escape(user_n),function(err,result,fields)
+                {
+                    if(err)
+                    {
+                        throw err;
+                    }else{
+                        console.log("Add Carrito Step 2");
+                        usuarioID=result;
+                        SQL="INSERT INTO Carrito(usuarioID,pastelID,cantidad) VALUES("+mysql.escape(usuarioID)+","+mysql.escape(pastel)+","+mysql.escape(cantidad)+")";
+                        connection.query(SQL,function(err,result,fields)
+                    {
+                        if(err)
+                        {
+                            throw err;
+                        }else{
+                            res.send("OK");
+                        }
+                    });
+                    }
+                });
+            }else{
+                res.send("No User");
+            }
+        }
+    });
+    
+});
+
 //Agregar Pasteles
 app.post('/add/pasteles',function(req,res)
 {
@@ -233,7 +312,7 @@ app.post('/add/pasteles',function(req,res)
     var precio=req.body.precio;
     var cubiertaID=req.body.cubiertaID;
     var tamanoID=req.body.tamanoID;
-    var existencias=req.body.existencias;
+    var existencia=req.body.existencias;
     var clave=req.body.clave;
     var imgRef=req.body.imgRef;
 
@@ -267,11 +346,14 @@ app.post('/add/pasteles',function(req,res)
                             res.send("Ok");
                         });
                         }else{
+                            res.send("No admin");
                             console.log("Algo paso mal :c");
                         }
                         //console.log("Reporte Final Step");
                     }   
                 });
+                }else{
+                    res.send("No user");
                 }
             }
         });
@@ -315,11 +397,14 @@ app.post('/add/cubierta',function(req,res)
                             res.send("Ok");
                         });
                         }else{
+                            res.send("No Existe usuario de Administrador");
                             console.log("Algo paso mal :c");
                         }
                         //console.log("Reporte Final Step");
                     }   
                 });
+                }else{
+                    res.send("No existe Usuario");
                 }
             }
         });
@@ -344,7 +429,7 @@ app.post('/add/sabor',function(req,res)
             throw err;  
            }else{
 
-                console.log("Insert Cub Step 1");
+                console.log("Insert Sab Step 1");
                 //Se utiliza para usar json con texto plano.
                 Aut=result[0].count;
                 if(Aut!=0)
@@ -354,7 +439,7 @@ app.post('/add/sabor',function(req,res)
                     if(err){
                         throw err;
                     }else{
-                        console.log("Insert Cub Step 2");
+                        console.log("Insert Sab Step 2");
                         Adm=parseInt(result[0].administrador);
                         if(Adm==1)
                         {
@@ -364,11 +449,15 @@ app.post('/add/sabor',function(req,res)
                             res.send("Ok");
                         });
                         }else{
+                            res.send("No Existe usuario de Administrador");
+                            
                             console.log("Algo paso mal :c");
                         }
                         //console.log("Reporte Final Step");
                     }   
                 });
+                }else{
+                    res.send("No existe Usuario");
                 }
             }
         });
@@ -380,7 +469,7 @@ app.post('/add/tipo',function(req,res)
 {
     res.header("Access-Control-Allow-Origin", "*");
     res.setHeader('Content-Type','text/html; charset=utf-8mb4');
-    var user_n = req.body.correo;;
+    var user_n = req.body.correo;
     var contras=req.body.contra;
     var nombre=req.body.nombre;
 
@@ -393,8 +482,9 @@ app.post('/add/tipo',function(req,res)
             throw err;  
            }else{
 
-                console.log("Insert Cub Step 1");
+                console.log("Insert tip Step 1");
                 //Se utiliza para usar json con texto plano.
+                console.log(user_n +" "+contras+" " + " "+ nombre);
                 Aut=result[0].count;
                 if(Aut!=0)
                 {
@@ -403,7 +493,7 @@ app.post('/add/tipo',function(req,res)
                     if(err){
                         throw err;
                     }else{
-                        console.log("Insert Cub Step 2");
+                        console.log("Insert Tip Step 2");
                         Adm=parseInt(result[0].administrador);
                         if(Adm==1)
                         {
@@ -413,11 +503,14 @@ app.post('/add/tipo',function(req,res)
                             res.send("Ok");
                         });
                         }else{
+                            res.send("No Existe usuario de Administrador");
                             console.log("Algo paso mal :c");
                         }
                         //console.log("Reporte Final Step");
                     }   
                 });
+                }else{
+                    res.send("No existe Usuario");
                 }
             }
         });
