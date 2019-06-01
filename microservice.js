@@ -1,5 +1,6 @@
 var express = require("express");
 var app=express();
+var session = require('express-session');
 var path=require("path");
 var excel = require("exceljs");
 var usuario;
@@ -12,6 +13,13 @@ const connection = mysql.createConnection({
   password: 'Chavapi181113<3',
   database: 'PasteleriaDB'
 });
+
+app.use(session({ 
+    secret: 'keyboard cat', 
+    resave: false,
+    saveUninitialized: true,
+    cookie: { maxAge: 60000 }
+}));
 
 var bodyParser=require("body-parser")
 app.use(bodyParser.json());
@@ -43,22 +51,48 @@ app.post('/login',function(req,res)
     var user_n =req.body.correo;
     var contras=req.body.contra;
     var Aut;
-    connection.query("SELECT count(*) FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena= MD5(" +mysql.escape(contras)+")",function(err,result,fields)
     {
-       if(err) throw err;
-       console.log("User Login Step 1");
+       if(err){
+        throw err;
+       }else{
+        console.log("User Login Step 1 ");
         //Se utiliza para usar json con texto plano.
-       Aut=result;
+       Aut=result[0].count;;
+        if(Aut!=0)
+        {
+           connection.query("SELECT * FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena= MD5(" +mysql.escape(contras)+")",function(err,result2,fields)
+        {
+           if(err) throw err;
+           req.session.loggedid=true;
+           req.session.username=user_n;
+           req.session.contra=contras;
+           console.log("User Login Step 2" + req.session.username);
+           res.send(result2);
+
+           //res.redirect("/home")
+        }); 
+        }else{
+            console.log()
+            res.send("No User");
+        }
+       } 
+       
     });
-    if(Aut!=0)
+    
+});
+
+app.get('/home',function(req,res)
+{
+    console.log('Redirected to /home :D '+req.session.username +' '+ req.session.contra);
+    if(req.session.loggedid)
     {
-       connection.query("SELECT * FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
-    {
-       if(err) throw err;
-       console.log("User Login Step 2");
-       res.send(result);
-    }); 
+        res.send('Welcome '+ req.session.username);
+    }else{
+        res.send('No Logged');
     }
+    res.end();
+    
 });
 
 app.get('/cubiertas',function(req,res)
@@ -66,7 +100,9 @@ app.get('/cubiertas',function(req,res)
     //Se utiliza para usar json con texto plano.
     res.header("Access-Control-Allow-Origin", "*");
     res.setHeader('Content-Type','text/html; charset=utf-8mb4');
-
+    req.session.loggedid=true;
+    req.session.username='prueba';
+    req.session.contra='true';
     connection.query("SELECT * FROM Cubierta",function(err,result,fields)
     {
        if(err) throw err;
@@ -84,7 +120,7 @@ app.post('/carrito',function(req,res)
     var user_n =req.body.correo;
     var contras=req.body.contra;
     var Aut;
-    connection.query("SELECT count(*) FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+    connection.query("SELECT count(*) FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena= MD5(" +mysql.escape(contras)+")",function(err,result,fields)
     {
        if(err) throw err;
        console.log("Carrito Step 1");
@@ -93,7 +129,6 @@ app.post('/carrito',function(req,res)
     });
     if(Aut!=0)
     {
-      
     //Se consulta el Carrito
     connection.query("SELECT * FROM vwCarrito WHERE usuario=" + mysql.escape(user_n) ,function(err,result,fields)
     {
@@ -164,48 +199,57 @@ app.get('/search/sabor',function(req,res){
 
 
 //Prueba de envio de archivos.
-app.post('/send',function(req,res){
+// app.post('/send',function(req,res){
 
 
-        //Se utiliza para usar json con texto plano.
-        res.header("Access-Control-Allow-Origin", "*");
-        res.setHeader('Content-Type','text/html; charset=utf-8mb4');
+//         //Se utiliza para usar json con texto plano.
+//         res.header("Access-Control-Allow-Origin", "*");
+//         res.setHeader('Content-Type','text/html; charset=utf-8mb4');
     
-        var user_n =req.body.correo;
-        var contras=req.body.contra;
-        var Aut,Adm;
-        connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
-        {
-           if(err){
-            throw err;  
-           }else{
+//         var user_n =req.body.correo;
+//         var contras=req.body.contra;
+//         var Aut,Adm;
+//         connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+//         {
+//            if(err){
+//             throw err;  
+//            }else{
 
-                console.log("Reporte Step 1");
-                //Se utiliza para usar json con texto plano.
-                Aut=result[0].count;
-                if(Aut!=0)
-                {
-                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
-                {
-                    if(err){
-                        throw err;
-                    }else{
-                        console.log("Reporte Step 2");
-                        Adm=parseInt(result[0].administrador);
-                        if(Adm==1)
-                        {
-                        console.log("Reporte Step 3");
-                        }else{
-                        console.log("Algo paso mal :c");
-                        }
-                        res.sendFile(__dirname + '/Prueba.xls')
-                        //console.log("Reporte Final Step");
-                    }   
-                });
-                }
-            }
-        });
+//                 console.log("Reporte Step 1");
+//                 //Se utiliza para usar json con texto plano.
+//                 Aut=result[0].count;
+//                 if(Aut!=0)
+//                 {
+//                     connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+//                 {
+//                     if(err){
+//                         throw err;
+//                     }else{
+//                         console.log("Reporte Step 2");
+//                         Adm=parseInt(result[0].administrador);
+//                         if(Adm==1)
+//                         {
+//                         console.log("Reporte Step 3");
+//                         }else{
+//                         console.log("Algo paso mal :c");
+//                         }
+//                         res.sendFile(__dirname + '/Prueba.xls')
+//                         //console.log("Reporte Final Step");
+//                     }   
+//                 });
+//                 }
+//             }
+//         });
+// });
+
+app.get('/send',function(req,res){
+
+
+    //Se utiliza para usar json con texto plano.
+    console.log("Send");
+    res.download('./reporte.pdf');    
 });
+
 
 //Agregar Usuarios.
 app.post('/add/user',function(req,res){
@@ -219,7 +263,7 @@ app.post('/add/user',function(req,res){
     var nombre=req.body.nombre;  
     var direccion=req.body.direccion;
     var SQL="INSERT INTO Usuario(nombre,aPaterno,aMaterno,correo,contrasena,administrador,direccion) VALUES("+mysql.escape(nombre)+","+mysql.escape(aPaterno)+","+mysql.escape(aMaterno)+
-    ","+mysql.escape(correo)+","+mysql.escape(contrasena)+","+"0"+","+mysql.escape(direccion)+");";
+    ","+mysql.escape(correo)+",MD5("+mysql.escape(contrasena)+"),"+"0"+","+mysql.escape(direccion)+");";
     connection.query("SELECT count(*) as count FROM Usuario where correo="+mysql.escape(correo),function(err,result,fields)
     {
         console.log(correo+contrasena+aPaterno+aMaterno+nombre+direccion+nombre+direccion);
@@ -258,10 +302,10 @@ app.post('/add/carrito',function(req,res)
     var user_n = req.body.correo;
     var contras=req.body.contra;
     var pastel=req.body.pastel;
-    var pastel=req.body.cantidad;
+    var cantidad=req.body.cantidad;
     var SQL,Aut;
     var usuarioID;
-    connection.query("SELECT count(*) as count FROM Usuario WHERE correo="+mysql.escape(user_n)+" AND contrasena="+mysql.escape(contras),function(err,result,fields){
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo="+mysql.escape(user_n)+" AND contrasena= MD5("+mysql.escape(contras)+")",function(err,result,fields){
         if(err)
         {
             throw err;
@@ -281,14 +325,33 @@ app.post('/add/carrito',function(req,res)
                         usuarioID=result;
                         SQL="INSERT INTO Carrito(usuarioID,pastelID,cantidad) VALUES("+mysql.escape(usuarioID)+","+mysql.escape(pastel)+","+mysql.escape(cantidad)+")";
                         connection.query(SQL,function(err,result,fields)
-                    {
-                        if(err)
                         {
-                            throw err;
-                        }else{
-                            res.send("OK");
-                        }
-                    });
+                            if(err)
+                            {
+                                throw err;
+                            }else{
+                                res.send("OK");
+                                SQL="SELECT existencias FROM Pastel WHERE pastelID="+mysql.escape(pastel);
+  
+                                connection.query(SQL,function(err,result,fields)
+                                {
+                                if(err)
+                                {
+                                    throw err;
+                                }else{
+                                    Aut=result[0].existencias;
+                                    Aut=Aut-cantidad;
+                                    SQL="UPDATE Pastel SET existencias="+mysql.escape(Aut.toString)+"WHERE pastelID="+mysql.escape(pastel);
+                                    connection.query(SQL,function(err,result,fields){
+                                        if(err) throw err;
+                                    });
+                                }
+                                
+                                });
+                            }
+                        });
+
+                        
                     }
                 });
             }else{
@@ -315,12 +378,13 @@ app.post('/add/pasteles',function(req,res)
     var existencia=req.body.existencias;
     var clave=req.body.clave;
     var imgRef=req.body.imgRef;
+    var descripcion="Otro pastel";
 
-    var SQL="INSERT INTO Pastel(nombre, saborID, tipoID, precio, cubiertaID, tamanoID, existencias, clave, imgRef) VALUES("+
-    mysql.escape(nombre)+','+mysql.escape(saborID)+','+mysql.escape(tipoID)+','+mysql.escape(precio)+','+mysql.escape(cubiertaID)+','+mysql.escape(tamanoID)+','+
+    var SQL="INSERT INTO Pastel(nombre,descripcion, saborID, tipoID, precio, cubiertaID, tamanoID, existencias, clave, imgRef) VALUES("+
+    mysql.escape(nombre)+','+mysql.escape(descripcion)+','+mysql.escape(saborID)+','+mysql.escape(tipoID)+','+mysql.escape(precio)+','+mysql.escape(cubiertaID)+','+mysql.escape(tamanoID)+','+
     mysql.escape(existencia)+','+mysql.escape(clave)+','+mysql.escape(imgRef)+");";
 
-    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena= MD5(" +mysql.escape(contras)+")",function(err,result,fields)
         {
            if(err){
             throw err;  
@@ -331,7 +395,7 @@ app.post('/add/pasteles',function(req,res)
                 Aut=result[0].count;
                 if(Aut!=0)
                 {
-                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena= MD5(" +mysql.escape(contras)+")",function(err,result,fields)
                 {
                     if(err){
                         throw err;
@@ -371,7 +435,7 @@ app.post('/add/cubierta',function(req,res)
     var SQL="INSERT INTO Cubierta(nombre) VALUES("+
     mysql.escape(nombre)+");";
 
-    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=MD5(" +mysql.escape(contras)+")",function(err,result,fields)
         {
            if(err){
             throw err;  
@@ -382,7 +446,7 @@ app.post('/add/cubierta',function(req,res)
                 Aut=result[0].count;
                 if(Aut!=0)
                 {
-                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena= MD5(" +mysql.escape(contras)+")",function(err,result,fields)
                 {
                     if(err){
                         throw err;
@@ -423,7 +487,7 @@ app.post('/add/sabor',function(req,res)
     var SQL="INSERT INTO Sabor(nombre) VALUES("+
     mysql.escape(nombre)+");";
 
-    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena= MD5(" +mysql.escape(contras)+")",function(err,result,fields)
         {
            if(err){
             throw err;  
@@ -434,7 +498,7 @@ app.post('/add/sabor',function(req,res)
                 Aut=result[0].count;
                 if(Aut!=0)
                 {
-                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena= MD5(" +mysql.escape(contras)+")",function(err,result,fields)
                 {
                     if(err){
                         throw err;
@@ -476,7 +540,7 @@ app.post('/add/tipo',function(req,res)
     var SQL="INSERT INTO Tipo(nombre) VALUES("+
     mysql.escape(nombre)+");";
 
-    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+    connection.query("SELECT count(*) as count FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena= MD5(" +mysql.escape(contras)+")",function(err,result,fields)
         {
            if(err){
             throw err;  
@@ -488,7 +552,7 @@ app.post('/add/tipo',function(req,res)
                 Aut=result[0].count;
                 if(Aut!=0)
                 {
-                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena=" +mysql.escape(contras),function(err,result,fields)
+                    connection.query("SELECT administrador FROM Usuario WHERE correo=" + mysql.escape(user_n) + " AND contrasena= MD5(" +mysql.escape(contras)+")",function(err,result,fields)
                 {
                     if(err){
                         throw err;
