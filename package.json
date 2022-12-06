@@ -21,7 +21,7 @@
   "homepage": "https://github.com/SalvadorHellsing95/ElGloboMS#readme",
   "dependencies": {
     "exceljs": "^1.11.0",
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "mysql": "^2.17.1",
     "path": "^0.12.7",
     "tempfile": "^3.0.0"
